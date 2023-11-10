@@ -1,6 +1,6 @@
 ## HyperaDev/actions
 
-This repository contains reusable GitHub Actions files for Hypera Development's project.
+This repository contains reusable GitHub Actions files for Hypera Development's projects.
 
 ### Contact
 
