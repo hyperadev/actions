@@ -8,5 +8,5 @@ on:
 
 jobs:
   snapshot:
-    uses: HyperaDev/actions/workflows/gradle-snapshot.yml@main
+    uses: HyperaDev/actions/.github/workflows/gradle-snapshot.yml@main
     secrets: "inherit"

@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    uses: HyperaDev/actions/workflows/gradle-release.yml@main
+    uses: HyperaDev/actions/.github/workflows/gradle-release.yml@main
     secrets: "inherit"
     with:
       project_name: "Project" # TODO: replace with actual project name
