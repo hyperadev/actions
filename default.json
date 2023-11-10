@@ -1,0 +1,52 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Standard config for use across all Hypera Development projects",
+  "extends": [
+    "config:best-practices",
+    ":disableRateLimiting",
+    ":enableVulnerabilityAlerts",
+    "preview:dockerCompose",
+    "preview:dockerVersions",
+    "regexManagers:dockerfileVersions",
+    "regexManagers:githubActionsVersions"
+  ],
+  "assigneesFromCodeOwners": true,
+  "configMigration": true,
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if isMajor}}{{prettyNewMajor}}{{else}}{{#if isSingleVersion}}{{prettyNewVersion}}{{else}}{{#if newValue}}{{{newValue}}}{{else}}{{{newDigestShort}}}{{/if}}{{/if}}{{/if}}{{/if}}",
+  "commitMessageSuffix": "",
+  "labels": [
+    "type: dependencies"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "commitMessageTopic": "image {{depName}}"
+    },
+    {
+      "matchDatasources": [
+        "helm"
+      ],
+      "commitMessageTopic": "chart {{depName}}"
+    },
+    {
+      "matchSourceUrlPrefixes": [
+        "https://github.com/google/error-prone"
+      ],
+      "groupName": "error-prone monorepo"
+    },
+    {
+      "matchPackagePrefixes": [
+        "com.google.auto.value:"
+      ],
+      "groupName": "auto-value monorepo"
+    }
+  ]
+}

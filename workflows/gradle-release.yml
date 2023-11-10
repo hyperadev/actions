@@ -1,0 +1,169 @@
+#
+# This file is a part of HyperaDev/actions, licensed under the MIT License.
+#
+# Copyright (c) 2021-2023 Joshua Sing <joshua@hypera.dev>
+# Copyright (c) 2021-2023 LooFifteen <luis@lu15.dev>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+# GitHub Actions workflow to publish releases.
+name: "Release"
+on:
+  workflow_call:
+    inputs:
+      project_name:
+        description: "Project name, used in release title"
+        type: string
+        required: true
+      java_version:
+        description: "JDK version to be used when building"
+        default: 11
+        type: number
+        required: false
+      gradle_extra_args:
+        description: "Extra arguments to execute Gradle with"
+        default: ""
+        type: string
+        required: false
+      release_maven_central:
+        description: "Whether to close and release Sonatype staging repository"
+        default: false
+        type: boolean
+        required: false
+    secrets:
+      HYPERA_SIGNING_KEY:
+        description: "Hypera Development GPG signing key"
+        required: false
+      HYPERA_SIGNING_PASSWORD:
+        description: "Hypera Development GPG signing key password"
+        required: false
+      HYPERA_RELEASES_USERNAME:
+        description: "Hypera Development releases repository username"
+        required: false
+      HYPERA_RELEASES_PASSWORD:
+        description: "Hypera Development releases repository password"
+        required: false
+      SONATYPE_USERNAME:
+        description: "Sonatype OSSRH username"
+        required: false
+      SONATYPE_PASSWORD:
+        description: "Sonatype OSSRH password"
+        required: false
+      GITHUB_RELEASE_TOKEN:
+        description: "GitHub token used to create release"
+        required: false
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: "Validate"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: "Validate Gradle wrapper"
+        uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # v1
+
+  release:
+    name: "Release"
+    runs-on: "ubuntu-latest"
+    needs: ["validate"]
+    environment:
+      name: "release"
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: "Set up JDK ${{ inputs.java_version }}"
+        uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3
+        with:
+          java-version: "${{ inputs.java_version }}"
+          distribution: "temurin" # Adoptium
+
+      - name: "Validate version"
+        id: version
+        # This script extracts the current version, prevents releasing '-SNAPSHOT'
+        # versions, and determines the version type (stability), e.g.
+        #  1.0.0 = stable, 1.1.0-rc.1 = unstable, 0.1.0 = unstable
+        run: |
+          # Extract version
+          VERSION="$(grep -oP '(?<=version = \").*(?=\")' build.gradle.kts)"
+          # Prevent releasing '-SNAPSHOT' versions
+          if echo "$VERSION" | grep -q 'SNAPSHOT'; then
+            echo "Detected snapshot version, refusing to release..."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # Determine version type
+          TYPE=unstable
+          if echo "$VERSION" | grep -Eq '^[1-9][0-9]*\.[0-9]+\.[0-9]+$'; then
+            TYPE=stable
+          fi
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "Detected $TYPE version"
+
+      - name: "Prepare for publish"
+        env:
+          VERSION: "${{ steps.version.outputs.version }}"
+        run: |
+          # Configure Git
+          git config --global user.name "hypera-bot"
+          git config --global user.email "bot@hypera.dev"
+
+          # Indra only publishes release versions if HEAD is tagged
+          git tag -a "v$VERSION" HEAD -m "v$VERSION"
+
+      - name: "Publish artifacts"
+        uses: gradle/gradle-build-action@842c587ad8aa4c68eeba24c396e15af4c2e9f30a # v2
+        with:
+          arguments: "${{ inputs.gradle_extra_args }} publish closeSonatypeStagingRepository"
+        env:
+          ORG_GRADLE_PROJECT_hyperaSigningKey: "${{ secrets.HYPERA_SIGNING_KEY }}"
+          ORG_GRADLE_PROJECT_hyperaSigningPassword: "${{ secrets.HYPERA_SIGNING_PASSWORD }}"
+          ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
+          ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
+          ORG_GRADLE_PROJECT_hyperaReleasesUsername: "${{ secrets.HYPERA_RELEASES_USERNAME }}"
+          ORG_GRADLE_PROJECT_hyperaReleasesPassword: "${{ secrets.HYPERA_RELEASES_PASSWORD }}"
+
+      - name: "Release to Maven Central"
+        if: inputs.release_maven_central
+        uses: gradle/gradle-build-action@842c587ad8aa4c68eeba24c396e15af4c2e9f30a # v2
+        with:
+          arguments: "findSonatypeStagingRepository releaseSonatypeStagingRepository"
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
+          ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
+
+      - name: "Create GitHub release"
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          name: "${{ inputs.project_name }} v${{ steps.version.outputs.version }}"
+          tag_name: "v${{ steps.version.outputs.version }}"
+          prerelease: ${{ steps.version.outputs.type == 'unstable' }}
+          target_commitish: "${{ github.ref_name }}"
+          generate_release_notes: true
+          token: "${{ secrets.GITHUB_RELEASE_TOKEN }}"

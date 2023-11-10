@@ -1,0 +1,108 @@
+#
+# This file is a part of HyperaDev/actions, licensed under the MIT License.
+#
+# Copyright (c) 2021-2023 Joshua Sing <joshua@hypera.dev>
+# Copyright (c) 2021-2023 LooFifteen <luis@lu15.dev>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+# GitHub Actions workflow to build a Gradle project.
+name: "Gradle"
+on:
+  workflow_call:
+    inputs:
+      java_version:
+        description: "JDK version to be used when building"
+        default: 11
+        type: number
+        required: false
+      gradle_extra_args:
+        description: "Extra arguments to execute Gradle with"
+        default: ""
+        type: string
+        required: false
+      gradle_warning_mode:
+        description: "Gradle warning mode"
+        default: "fail" # Fail on warnings
+        type: string
+        required: false
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.event.number || github.ref }}"
+  cancel-in-progress: "${{ github.event.action != 'merge_group' }}"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: "Validate"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: "Validate Gradle wrapper"
+        uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # v1
+
+  build:
+    name: "Build"
+    runs-on: "ubuntu-latest"
+    needs: ["validate"]
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: "Set up JDK ${{ inputs.java_version }}"
+        uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3
+        with:
+          java-version: "${{ inputs.java_version }}"
+          distribution: "temurin" # Adoptium
+
+      - name: "Prepare for build"
+        env:
+          WARNING_MODE: "${{ inputs.gradle_warning_mode }}"
+        run: |
+          # Write Gradle warning mode to user home
+          mkdir -p $HOME/.gradle/
+          echo "org.gradle.warning.mode=$WARNING_MODE" >> $HOME/.gradle/gradle.properties
+
+      - name: "Build"
+        uses: gradle/gradle-build-action@842c587ad8aa4c68eeba24c396e15af4c2e9f30a # v2
+        with:
+          gradle-version: "wrapper"
+          arguments: "${{ inputs.gradle_extra_args }} build"
+
+      - name: "Archive test reports"
+        if: always()
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+        with:
+          name: "${{ runner.os }}-test-reports"
+          if-no-files-found: ignore
+          path: |
+            **/build/reports/
+
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3
+        with:
+          fail_ci_if_error: false

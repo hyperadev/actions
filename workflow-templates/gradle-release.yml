@@ -1,0 +1,14 @@
+# GitHub Actions workflow to publish releases.
+# Releases are published from the 'releases/<major>' branches.
+name: "Release"
+on:
+  push:
+    branches: [ "releases/**" ]
+
+jobs:
+  release:
+    uses: HyperaDev/actions/workflows/gradle-release.yml@main
+    secrets: "inherit"
+    with:
+      project_name: "Project" # TODO: replace with actual project name
+      release_maven_central: false
