@@ -43,6 +43,16 @@ on:
         default: "fail" # Fail on warnings
         type: string
         required: false
+      codecov_enabled:
+        description: "Whether test coverage should be uploaded to Codecov"
+        default: true
+        type: boolean
+        required: false
+      upload_artifacts:
+        description: "Artifacts to upload after building"
+        default: ""
+        type: string
+        required: false
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.event.number || github.ref }}"
@@ -103,6 +113,14 @@ jobs:
             **/build/reports/
 
       - name: "Upload coverage to Codecov"
+        if: inputs.codecov_enabled
         uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3
         with:
           fail_ci_if_error: false
+
+      - name: "Upload artifacts"
+        if: inputs.upload_artifacts != ''
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+        with:
+          if-no-files-found: ignore
+          path: "${{ inputs.upload_artifacts }}"
