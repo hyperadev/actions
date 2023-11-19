@@ -47,6 +47,11 @@ on:
         default: false
         type: boolean
         required: false
+      release_files:
+        description: "Newline-delimited list of path globs to upload when creating GitHub release"
+        default: ""
+        type: string
+        required: false
     secrets:
       HYPERA_SIGNING_KEY:
         description: "Hypera Development GPG signing key"
@@ -68,7 +73,7 @@ on:
         required: false
       GITHUB_RELEASE_TOKEN:
         description: "GitHub token used to create release"
-        required: false
+        required: true
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
@@ -167,3 +172,4 @@ jobs:
           target_commitish: "${{ github.ref_name }}"
           generate_release_notes: true
           token: "${{ secrets.GITHUB_RELEASE_TOKEN }}"
+          files: "${{ inputs.release_files }}"
