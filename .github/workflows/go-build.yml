@@ -70,6 +70,7 @@ jobs:
   vulncheck:
     name: "Vulnerability Check"
     runs-on: "ubuntu-latest"
+    if: inputs.vulncheck_enabled
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
