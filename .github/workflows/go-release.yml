@@ -1,0 +1,100 @@
+#
+# This file is a part of HyperaDev/actions, licensed under the MIT License.
+#
+# Copyright (c) 2021-2023 Joshua Sing <joshua@hypera.dev>
+# Copyright (c) 2021-2023 LooFifteen <luis@lu15.dev>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+# GitHub Actions workflow to release a Go project using GoReleaser.
+name: "Release"
+
+on:
+  workflow_call:
+    inputs:
+      go_version:
+        description: "Go version"
+        required: false
+        type: string
+        default: "stable"
+      docker_enabled:
+        description: "Whether to setup Docker and login to container registries"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      GITHUB_RELEASE_TOKEN:
+        required: true
+
+jobs:
+  release:
+    name: "Release"
+    runs-on: "ubuntu-latest"
+    environment:
+      name: "release"
+    permissions:
+      contents: read
+      packages: write
+    env:
+      DOCKER_CLI_EXPERIMENTAL: enabled
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: "Setup Go ${{ inputs.go_version }}"
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v3
+        with:
+          go-version: "${{ inputs.go_version }}"
+          cache: true
+          check-latest: true
+
+      - name: "Setup QEMU"
+        if: inputs.docker_enabled
+        uses: docker/setup-qemu-action@v3
+
+      - name: "Setup Docker Buildx"
+        if: inputs.docker_enabled
+        uses: docker/setup-buildx-action@v3
+
+      - name: "Login to DockerHub"
+        if: inputs.docker_enabled
+        uses: docker/login-action@v3
+        with:
+          username: "${{ secrets.DOCKERHUB_USERNAME }}"
+          password: "${{ secrets.DOCKERHUB_TOKEN }}"
+
+      - name: "Login to GitHub Container Registry"
+        if: inputs.docker_enabled
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: "${{ github.repository_owner }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: "Release"
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          args: "release --clean"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_RELEASE_TOKEN }}"
