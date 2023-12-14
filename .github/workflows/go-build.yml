@@ -128,15 +128,16 @@ jobs:
         run: go build -v ${{ inputs.go_build_args }} ./...
 
       - name: "Test"
-        run: go test -race -coverprofile=coverage.out -covermode=atomic -v ./...
+        run: go test -race -coverprofile="coverage.out" -covermode=atomic -v ./...
 
       - name: "Upload coverage to Codecov"
-        if: inputs.codecov_enabled
+        if: inputs.codecov_enabled && runner.os == "linux"
         uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3
 
       - name: "Upload artifacts"
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         with:
+          name: "${{ runner.os }}-artifacts"
           if-no-files-found: ignore
           path: |
             coverage.out
