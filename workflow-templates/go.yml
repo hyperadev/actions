@@ -14,5 +14,7 @@ jobs:
     with:
       # go_version: ""
       # go_build_args: ""
-      # codecov_enabled: true
+      # codecov_enabled: false
+      # lint_enabled: false
+      # vulncheck_enabled: true
       # upload_artifacts: ""
