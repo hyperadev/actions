@@ -1,0 +1,18 @@
+# GitHub Actions workflow to release a Go project using GoReleaser.
+# Releases are published from tags matching "v*.*.*".
+name: "Release"
+on:
+  push:
+    tags: [ "v*.*.*" ]
+
+jobs:
+  release:
+    name: "Release"
+    uses: HyperaDev/actions/.github/workflows/go-release.yml@main
+    with:
+      # go_version: ""
+      # docker_enabled: true
+    secrets:
+      # DOCKERHUB_USERNAME: "${{ secrets.DOCKERHUB_USERNAME }}"
+      # DOCKERHUB_TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+      GITHUB_RELEASE_TOKEN: "${{ secrets.GITHUB_RELEASE_TOKEN }}"
