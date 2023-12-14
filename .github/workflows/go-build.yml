@@ -40,7 +40,12 @@ on:
         required: false
       codecov_enabled:
         description: "Whether test coverage should be uploaded to Codecov"
-        default: true
+        default: false
+        type: boolean
+        required: false
+      lint_enabled:
+        description: "Whether to run golangci-lint"
+        default: false
         type: boolean
         required: false
       upload_artifacts:
@@ -85,6 +90,13 @@ jobs:
 
       - name: "Test"
         run: go test -race -coverprofile=coverage.out -covermode=atomic -v ./...
+
+      - name: "Lint"
+        if: inputs.lint_enabled
+        uses: golangci/golangci-lint-action@
+        with:
+          version: "latest"
+          only-new-issues: true
 
       - name: "Upload coverage to Codecov"
         if: inputs.codecov_enabled
