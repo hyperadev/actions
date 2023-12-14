@@ -119,7 +119,7 @@ jobs:
 
       - name: "Lint"
         if: inputs.lint_enabled
-        uses: golangci/golangci-lint-action@
+        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3
         with:
           version: "latest"
           only-new-issues: true
