@@ -143,7 +143,7 @@ jobs:
           git tag -a "v$VERSION" HEAD -m "v$VERSION"
 
       - name: "Publish artifacts"
-        uses: gradle/gradle-build-action@8cbcb9948b5892387aed077daf6f90e1f0ba5b27 # v2
+        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # v2
         with:
           arguments: "${{ inputs.gradle_extra_args }} publish closeSonatypeStagingRepository"
         env:
@@ -156,7 +156,7 @@ jobs:
 
       - name: "Release to Maven Central"
         if: inputs.release_maven_central
-        uses: gradle/gradle-build-action@8cbcb9948b5892387aed077daf6f90e1f0ba5b27 # v2
+        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # v2
         with:
           arguments: "findSonatypeStagingRepository releaseSonatypeStagingRepository"
         env:
