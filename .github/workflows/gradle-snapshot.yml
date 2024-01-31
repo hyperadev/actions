@@ -1,7 +1,7 @@
 #
 # This file is a part of HyperaDev/actions, licensed under the MIT License.
 #
-# Copyright (c) 2021-2023 Joshua Sing <joshua@hypera.dev>
+# Copyright (c) 2021-2024 Joshua Sing <joshua@hypera.dev>
 # Copyright (c) 2021-2023 LooFifteen <luis@lu15.dev>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,8 +30,8 @@ on:
     inputs:
       java_version:
         description: "JDK version to be used when building"
-        default: 11
-        type: number
+        default: "21" # Use latest JDK LTS.
+        type: string
         required: false
       gradle_extra_args:
         description: "Extra arguments to execute Gradle with"
@@ -66,31 +66,28 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: "Validate"
+  publish:
+    name: "Publish"
     runs-on: "ubuntu-latest"
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
-
-      - name: "Validate Gradle wrapper"
-        uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # v1
-
-  snapshot:
-    name: "Snapshot"
-    runs-on: "ubuntu-latest"
-    needs: ["validate"]
     environment:
       name: "snapshot"
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
-      - name: "Set up JDK ${{ inputs.java_version }}"
+      - name: "Validate Gradle wrapper"
+        uses: gradle/wrapper-validation-action@27152f6fa06a6b8062ef7195c795692e51fc2c81 # v2
+
+      - name: "Setup JDK ${{ inputs.java_version }}"
         uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4
         with:
           java-version: "${{ inputs.java_version }}"
-          distribution: "temurin" # Adoptium
+          distribution: "temurin"
+
+      - name: "Setup Gradle"
+        uses: gradle/actions/setup-gradle@aff52e5be96935327d77c5529075184377dc4371 # v3
+        with:
+          gradle-version: "wrapper"
 
       - name: "Validate version"
         run: |
@@ -100,17 +97,8 @@ jobs:
           fi
           echo "Snapshot version detected"
 
-      - name: "Prepare for publish"
-        run: |
-          # Git ignore dependency graph files (Indra cleanliness checks)
-          mkdir -p .git/info/
-          echo "/dependency-graph-reports/" >> .git/info/exclude
-
       - name: "Publish artifacts"
-        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # v2
-        with:
-          dependency-graph: "generate"
-          arguments: "${{ inputs.gradle_extra_args }} publish"
+        run: ./gradlew ${{ inputs.gradle_extra_args }} publish
         env:
           ORG_GRADLE_PROJECT_hyperaSigningKey: "${{ secrets.HYPERA_SIGNING_KEY }}"
           ORG_GRADLE_PROJECT_hyperaSigningPassword: "${{ secrets.HYPERA_SIGNING_PASSWORD }}"
@@ -122,11 +110,14 @@ jobs:
   dependency-graph:
     name: "Dependency Graph"
     runs-on: "ubuntu-latest"
-    needs: ["snapshot"]
     permissions:
       contents: write
     steps:
-      - name: "Submit Dependency Graph"
-        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # v2
-        with:
-          dependency-graph: "download-and-submit"
+      - name: "Checkout repository"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: "Validate Gradle wrapper"
+        uses: gradle/wrapper-validation-action@27152f6fa06a6b8062ef7195c795692e51fc2c81 # v2
+
+      - name: "Generate and submit dependency graph"
+        uses: gradle/actions/dependency-submission@aff52e5be96935327d77c5529075184377dc4371 # v3

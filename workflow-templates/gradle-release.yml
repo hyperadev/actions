@@ -1,14 +1,25 @@
 # GitHub Actions workflow to publish releases.
 # Releases are published from the 'releases/<major>' branches.
-name: "Release"
+name: "Gradle"
 on:
   push:
     branches: [ "releases/**" ]
 
 jobs:
   release:
+    name: "Release"
     uses: HyperaDev/actions/.github/workflows/gradle-release.yml@main
-    secrets: "inherit"
     with:
       project_name: "Project" # TODO: replace with actual project name
-      release_maven_central: false
+      # java_version: "21"
+      # gradle_extra_args: ""
+      # release_maven_central: false
+      # release_files: ""
+    secrets:
+      # HYPERA_SIGNING_KEY: "${{ secrets.HYPERA_SIGNING_KEY }}"
+      # HYPERA_SIGNING_PASSWORD: "${{ secrets.HYPERA_SIGNING_PASSWORD }}"
+      # HYPERA_RELEASES_USERNAME: "${{ secrets.HYPERA_RELEASES_USERNAME }}"
+      # HYPERA_RELEASES_PASSWORD: "${{ secrets.HYPERA_RELEASES_PASSWORD }}"
+      # SONATYPE_USERNAME: "${{ secrets.SONATYPE_USERNAME }}"
+      # SONATYPE_PASSWORD: "${{ secrets.SONATYPE_PASSWORD }}"
+      GITHUB_RELEASE_TOKEN: "${{ secrets.GITHUB_RELEASE_TOKEN }}"

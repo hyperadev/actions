@@ -2,7 +2,7 @@
 name: "Gradle"
 on:
   push:
-    branches: [ "main", "releases/**" ]
+    branches: [ "main" ]
     tags-ignore: ["**"]
   pull_request:
     branches: [ "main" ]
@@ -10,4 +10,11 @@ on:
 
 jobs:
   build:
+    name: "Build"
     uses: HyperaDev/actions/.github/workflows/gradle-build.yml@main
+    with:
+      # java_version: "21"
+      # gradle_extra_args: ""
+      # gradle_warning_mode: "fail"
+      # codecov_enabled: false
+      # upload_artifacts: ""
