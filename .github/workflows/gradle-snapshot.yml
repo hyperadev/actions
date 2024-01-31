@@ -107,7 +107,7 @@ jobs:
           echo "/dependency-graph-reports/" >> .git/info/exclude
 
       - name: "Publish artifacts"
-        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # v2
+        uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # v3
         with:
           dependency-graph: "generate"
           arguments: "${{ inputs.gradle_extra_args }} publish"
@@ -127,6 +127,6 @@ jobs:
       contents: write
     steps:
       - name: "Submit Dependency Graph"
-        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # v2
+        uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # v3
         with:
           dependency-graph: "download-and-submit"
