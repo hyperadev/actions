@@ -17,4 +17,6 @@ jobs:
       # gradle_extra_args: ""
       # gradle_warning_mode: "fail"
       # codecov_enabled: false
+      # codecov_files: ""
+      # codecov_directory: ""
       # upload_artifacts: ""
