@@ -48,10 +48,24 @@ on:
         default: false
         type: boolean
         required: false
+      codecov_files:
+        description: "Comma-separated paths to the coverage report(s)"
+        default: ""
+        type: string
+        required: false
+      codecov_directory:
+        description: "Directory to search for coverage reports in"
+        default: ""
+        type: string
+        required: false
       upload_artifacts:
         description: "Artifacts to upload after building"
         default: ""
         type: string
+        required: false
+    secrets:
+      CODECOV_TOKEN:
+        description: "Codecov repository upload token"
         required: false
 
 concurrency:
@@ -108,9 +122,14 @@ jobs:
 
       - name: "Upload coverage to Codecov"
         if: always() && inputs.codecov_enabled
-        uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457 # v3
+        uses: codecov/codecov-action@f30e4959ba63075080d4f7f90cacc18d9f3fafd7 # v4.0.0
         with:
+          files: "${{ inputs.codecov_files }}"
+          directory: "${{ inputs.codecov_directory }}"
           fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
 
       - name: "Upload artifacts"
         if: inputs.upload_artifacts != ''
