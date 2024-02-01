@@ -1,12 +1,22 @@
 # GitHub Actions workflow to publish unstable snapshots.
 # Snapshots are published from the 'main' branch, and should always be considered
 # unstable and unfit for production usage.
-name: "Snapshot"
+name: "Gradle"
 on:
   push:
     branches: [ "main" ]
 
 jobs:
   snapshot:
+    name: "Snapshot"
     uses: HyperaDev/actions/.github/workflows/gradle-snapshot.yml@main
-    secrets: "inherit"
+    with:
+      # java_version: "21"
+      # gradle_extra_args: ""
+    secrets:
+      # HYPERA_SIGNING_KEY: "${{ secrets.HYPERA_SIGNING_KEY }}"
+      # HYPERA_SIGNING_PASSWORD: "${{ secrets.HYPERA_SIGNING_PASSWORD }}"
+      # HYPERA_SNAPSHOTS_USERNAME: "${{ secrets.HYPERA_SNAPSHOTS_USERNAME }}"
+      # HYPERA_SNAPSHOTS_PASSWORD: "${{ secrets.HYPERA_SNAPSHOTS_PASSWORD }}"
+      # SONATYPE_USERNAME: "${{ secrets.SONATYPE_USERNAME }}"
+      # SONATYPE_PASSWORD: "${{ secrets.SONATYPE_PASSWORD }}"
