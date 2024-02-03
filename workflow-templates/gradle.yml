@@ -8,6 +8,10 @@ on:
     branches: [ "main" ]
   merge_group:
 
+concurrency:
+  group: "gradle-build-${{ github.event.number || github.ref }}"
+  cancel-in-progress: "${{ github.event.action != 'merge_group' }}"
+
 jobs:
   build:
     name: "Build"

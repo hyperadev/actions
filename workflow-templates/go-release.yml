@@ -5,6 +5,9 @@ on:
   push:
     tags: [ "v*.*.*" ]
 
+concurrency:
+  group: "go-release-${{ github.ref }}"
+
 jobs:
   release:
     name: "Release"
