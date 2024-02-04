@@ -73,10 +73,6 @@ on:
         description: "Codecov repository upload token"
         required: false
 
-concurrency:
-  group: "${{ github.workflow }}-${{ github.event.number || github.ref }}"
-  cancel-in-progress: "${{ github.event.action != 'merge_group' }}"
-
 permissions:
   contents: read
 

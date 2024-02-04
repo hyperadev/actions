@@ -75,10 +75,6 @@ on:
         description: "GitHub token used to create release"
         required: true
 
-concurrency:
-  group: "${{ github.workflow }}-${{ github.ref }}"
-  cancel-in-progress: true
-
 permissions:
   contents: read
 
