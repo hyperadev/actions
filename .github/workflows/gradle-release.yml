@@ -110,7 +110,7 @@ jobs:
         #  1.0.0 = stable, 1.1.0-rc.1 = unstable, 0.1.0 = unstable
         run: |
           # Extract version
-          VERSION="$(grep -oP '(?<=version = \").*(?=\")' build.gradle.kts)"
+          VERSION="$(./gradlew properties | awk '/^version:/ { print $2; }')"
           # Prevent releasing '-SNAPSHOT' versions
           if echo "$VERSION" | grep -q 'SNAPSHOT'; then
             echo "Detected snapshot version, refusing to release..."

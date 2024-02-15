@@ -87,7 +87,8 @@ jobs:
 
       - name: "Validate version"
         run: |
-          if ! grep -q 'version = ".*-SNAPSHOT"' build.gradle.kts; then
+          VERSION="$(./gradlew properties | awk '/^version:/ { print $2; }')"
+          if ! echo "$VERSION" | grep -q 'SNAPSHOT'; then
             echo "Release version detected, refusing to publish..."
             exit 1
           fi
