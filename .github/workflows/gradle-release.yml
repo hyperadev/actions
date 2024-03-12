@@ -157,7 +157,7 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
 
       - name: "Create GitHub release"
-        uses: softprops/action-gh-release@20e085ccc73308c2c8e43ab8da4f8d7ecbb94d4e # v2
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
           name: "${{ inputs.project_name }} v${{ steps.version.outputs.version }}"
           tag_name: "v${{ steps.version.outputs.version }}"
