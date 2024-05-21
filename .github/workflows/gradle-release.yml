@@ -140,7 +140,7 @@ jobs:
           git tag -a "v$VERSION" HEAD -m "v$VERSION"
 
       - name: "Publish artifacts"
-        run: ./gradlew ${{ inputs.gradle_extra_args }} publish closeSonatypeStagingRepository
+        run: ./gradlew ${{ inputs.gradle_extra_args }} publish
         env:
           ORG_GRADLE_PROJECT_hyperaSigningKey: "${{ secrets.HYPERA_SIGNING_KEY }}"
           ORG_GRADLE_PROJECT_hyperaSigningPassword: "${{ secrets.HYPERA_SIGNING_PASSWORD }}"
@@ -151,7 +151,7 @@ jobs:
 
       - name: "Release to Maven Central"
         if: inputs.release_maven_central
-        run: ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository
+        run: ./gradlew findSonatypeStagingRepository closeAndReleaseSonatypeStagingRepository
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
           ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
