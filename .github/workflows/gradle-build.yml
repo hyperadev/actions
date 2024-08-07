@@ -109,7 +109,7 @@ jobs:
 
       - name: "Archive test reports"
         if: always()
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: "${{ runner.os }}-test-reports"
           if-no-files-found: ignore
@@ -129,7 +129,7 @@ jobs:
 
       - name: "Upload artifacts"
         if: inputs.upload_artifacts != ''
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           if-no-files-found: ignore
           path: "${{ inputs.upload_artifacts }}"
