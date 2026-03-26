@@ -11,7 +11,7 @@ concurrency:
 jobs:
   release:
     name: "Release"
-    uses: HyperaDev/actions/.github/workflows/go-release.yml@main
+    uses: HyperaDev/actions/.github/workflows/go-release.yml@beddc3665d0e5acb585777857b14115017633dd0 # main
     with:
       # go_version: ""
       # docker_enabled: true
